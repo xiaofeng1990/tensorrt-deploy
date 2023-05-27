@@ -1,0 +1,6 @@
+[submodule "3rd-party/libhv"]
+	path = 3rd-party/libhv
+	url = https://gitee.com/libhv/libhv.git
+[submodule "deploy/makeself"]
+	path = deploy/makeself
+	url = https://github.com/megastep/makeself.git
