@@ -44,9 +44,27 @@ bool XfConfig::Open(std::string config_file_path)
     return true;
 }
 
-bool XfConfig::SetConfigFilePath(std::string config_file_path)
+bool XfConfig::Init(std::string config_file_path)
 {
+    GError *error = NULL;
+    // open config file
+    config_key_file_ = g_key_file_new();
+    if (!g_key_file_load_from_file(
+            config_key_file_, config_file_path.c_str(),
+            (GKeyFileFlags)(G_KEY_FILE_KEEP_COMMENTS |
+                            G_KEY_FILE_KEEP_TRANSLATIONS),
+            &error))
+    {
+        XF_LOGT(ERROR, TAG, "Error loading %s config file: %s\n",
+                config_file_path.c_str(), error->message);
+
+        g_error_free(error);
+        error = NULL;
+        return false;
+    }
     config_file_path_ = config_file_path;
+
+    return true;
 }
 
 bool XfConfig::HasGroup(std::string group) const

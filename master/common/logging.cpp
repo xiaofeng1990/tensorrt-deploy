@@ -198,7 +198,7 @@ static void write_to_file(const char *data, size_t len, size_t micros)
     //     (g_file_prefix_updated || g_log_file_vec.size() == 0))
     if (g_file_prefix_updated || (g_log_file_vec.size() == 0))
     {
-        std::cout << "***************" << g_log_file_vec.size() << std::endl;
+        // std::cout << "***************" << g_log_file_vec.size() << std::endl;
         // todo log_file_prerfix
         const auto prefix = log_file_prefix();
         auto files = xffw::FindFilesForDir(g_save_path);
@@ -225,8 +225,8 @@ static void write_to_file(const char *data, size_t len, size_t micros)
                 pos1 = pos1 + 1;
                 const auto substr = it.substr(pos1, pos2 - pos1);
                 const auto digit = stoi(substr);
-                printf("pos1: %ld, pos2: %ld, %s == %d <- %s\n", pos1, pos2,
-                       substr.c_str(), digit, it.c_str());
+                // printf("pos1: %ld, pos2: %ld, %s == %d <- %s\n", pos1, pos2,
+                //        substr.c_str(), digit, it.c_str());
                 // modify value
                 g_log_file_idx = digit + 1;
             }
@@ -239,7 +239,7 @@ static void write_to_file(const char *data, size_t len, size_t micros)
         g_log_file_name = create_log_file(micros);
         g_full_path =
             generate_full_path(std::string(g_save_path), g_log_file_name);
-        fprintf(stderr, "log file: %s\n", g_full_path.c_str());
+        // fprintf(stderr, "log file: %s\n", g_full_path.c_str());
         g_file_prefix_updated = false;
         g_save_path_updated = false;
     }
@@ -357,27 +357,55 @@ void XfSaveToFile(bool save) { g_is_save_to_file = save; }
 
 void XfEnableProcessName() { g_use_process_name_for_file = true; }
 
+static int CreatePathIfNeeded(const char *path)
+{
+    if (access(path, F_OK) != 0)
+    {
+        // win: mkdir(dir)
+        if (-1 == mkdir(path, 0777))
+        {
+            fprintf(stderr, "DEBUG: create path(%s) fail (%s)\n", path,
+                    strerror(errno));
+            return -1;
+        }
+        else
+        {
+            fprintf(stderr, "DEBUG: log path(%s) do not exists, create it\n",
+                    path);
+        }
+        // modify permission
+        if (-1 == chmod(path, 0777))
+        {
+            fprintf(stderr,
+                    "DEBUG: modify permission fail(%s) for "
+                    "path(%s)",
+                    path, strerror(errno));
+        }
+    }
+    return 1;
+}
+
 int XfSetLogPath(const char *path)
 {
-    if (path == NULL)
+    if (NULL == path)
     {
         return -1;
     }
-    if (MkDir(path) == -1)
+    if (-1 == CreatePathIfNeeded(path))
     {
         return -1;
     }
     if (access(path, W_OK) != 0)
     {
-        fprintf(stderr, "ERROR: file path [%s] is not writable\n", path);
+        fprintf(stderr, "ERROR: file path(%s) do not writable\n", path);
         return -1;
     }
-    if (strcmp(g_save_path, path) != 0)
+    if (0 != strcmp(g_save_path, path))
     {
         strcpy(g_save_path, path);
         g_save_path_updated = true;
     }
-    return 0;
+    return 1;
 }
 
 void XfSetMaxFileNum(unsigned int num) { g_log_file_max_num = num; }
@@ -386,8 +414,7 @@ int XfSetFileSize(unsigned int size)
 {
     if (size < 1 || size > 50)
     {
-        fprintf(stderr, "DEBUG: File size [%d] is out of range([1 ~ 50]) M \n",
-                size);
+        printf("DEBUG: File size [%d] is out of range([1 ~ 50]) M \n", size);
         return -1;
     }
 

@@ -30,6 +30,17 @@ else()
     set(XT_GIT_ONELINE "unknow")
 endif()
 
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLIB REQUIRED glib-2.0)
+ 
+message(STATUS "glib-2.0 library status:")
+message(STATUS "    version: ${OpenCV_VERSION}")
+message(STATUS "    include path: ${GLIB_INCLUDE_DIRS}")
+message(STATUS "    lib path: ${GLIB_LIBRARY_DIRS}")
+message(STATUS "    lib: ${GLIB_LIBRARIES}")
+include_directories(${GLIB_INCLUDE_DIRS})
+link_directories(${GLIB_LIBRARY_DIRS})
+set(LINKS_LIBS ${LINKS_LIBS} ${GLIB_LIBRARIES})
 
 set(MAJOR_VERSION     1)
 set(MINOR_VERSION     0)
@@ -40,13 +51,16 @@ configure_file("${CMAKE_SOURCE_DIR}/master/template/versin.h.in"
     "${CMAKE_BINARY_DIR}/include/version.h")
 include_directories(${CMAKE_BINARY_DIR}/include)
 include_directories(.)
+include_directories(..)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
-# aux_source_directory(${PROJECT_SOURCE_DIR}/api             API_SRC_FILES)
+aux_source_directory(${PROJECT_SOURCE_DIR}/common   COMMON_SRC_FILES)
 set(TARGET_NAME xf_deploy)
 
 add_executable(${TARGET_NAME}
-    main.cpp
+    main.cpp config_env.cpp
+    ${COMMON_SRC_FILES}
 )
 
 target_link_libraries(${TARGET_NAME} PRIVATE ${LINKS_LIBS})

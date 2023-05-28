@@ -72,6 +72,16 @@
         "__tuple": "cpp",
         "ios": "cpp",
         "locale": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "csignal": "cpp",
+        "codecvt": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp",
+        "numeric": "cpp",
+        "set": "cpp",
+        "future": "cpp",
+        "typeindex": "cpp",
+        "valarray": "cpp",
+        "*.in": "cpp"
     }
 }

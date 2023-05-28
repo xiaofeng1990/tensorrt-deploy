@@ -1,15 +1,18 @@
 #ifndef SCHEDULER_VERSION_H_
 #define SCHEDULER_VERSION_H_
 
-#define MAJOR_VERSION      @MAJOR_VERSION@
-#define MINOR_VERSION      @MINOR_VERSION@
-#define REVISION_VERSION   @REVISION_VERSION@
-#define BUILD_VERSION      @XT_BUILD_DATE@
-#define GIT_ONELINE        @XT_GIT_ONELINE@
+#define MAJOR_VERSION @MAJOR_VERSION @
+#define MINOR_VERSION @MINOR_VERSION @
+#define REVISION_VERSION @REVISION_VERSION @
+#define BUILD_VERSION @XF_BUILD_DATE @
+#define GIT_ONELINE @XF_GIT_ONELINE @
 
 #define TO_STR(x) #x
 #define STRCAT(x) TO_STR(x)
 
-#define XT_VERSION STRCAT(MAJOR_VERSION) "." STRCAT(MINOR_VERSION) "." STRCAT(REVISION_VERSION) "." STRCAT(BUILD_VERSION) "." STRCAT(GIT_ONELINE)
+#define XF_VERSION                                                             \
+    STRCAT(MAJOR_VERSION)                                                      \
+    "." STRCAT(MINOR_VERSION) "." STRCAT(REVISION_VERSION) "." STRCAT(         \
+        BUILD_VERSION) "." STRCAT(GIT_ONELINE)
 
-#endif  // SCHEDULER_VERSION_H_
+#endif // SCHEDULER_VERSION_H_

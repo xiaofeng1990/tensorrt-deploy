@@ -16,7 +16,7 @@ class ConfigEnv final {
     void InitConfigPath();
     std::vector<std::string> GetPaths();
     std::string GetNewConfigPath();
-    static constexpr const char *CONFIG_MAGIC = "master_230318";
+    static constexpr const char *CONFIG_MAGIC = "master_230528";
     static constexpr const char *kTag = "configenv";
 };
 } // namespace xf

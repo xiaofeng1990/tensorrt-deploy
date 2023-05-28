@@ -28,7 +28,7 @@ class XfConfig {
     XfConfig() = default;
     ~XfConfig();
     bool Open(std::string config_file_path);
-    bool SetConfigFilePath(std::string config_file_path);
+    bool Init(std::string config_file_path);
     bool GetKeys(std::string group, std::vector<std::string> &keys) const;
     bool GetGroups(std::vector<std::string> &groups) const;
     // set a single value

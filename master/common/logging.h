@@ -46,7 +46,7 @@ XfSeverity XfGetMinLevel();
  *
  * @param save save log to file if 1, do not save if 0
  */
-void XfSaveToFile(int save);
+void XfSaveToFile(bool save);
 
 void XfEnableProcessName();
 
