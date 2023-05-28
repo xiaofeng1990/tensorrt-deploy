@@ -82,6 +82,7 @@
         "future": "cpp",
         "typeindex": "cpp",
         "valarray": "cpp",
-        "*.in": "cpp"
+        "*.in": "cpp",
+        "__functional_03": "cpp"
     }
 }

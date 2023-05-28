@@ -55,12 +55,14 @@ include_directories(..)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
-aux_source_directory(${PROJECT_SOURCE_DIR}/common   COMMON_SRC_FILES)
+aux_source_directory(${PROJECT_SOURCE_DIR}/common       COMMON_SRC_FILES)
+aux_source_directory(${PROJECT_SOURCE_DIR}/inference    INFER_SRC_FILES)
 set(TARGET_NAME xf_deploy)
 
 add_executable(${TARGET_NAME}
     main.cpp config_env.cpp
     ${COMMON_SRC_FILES}
+    ${INFER_SRC_FILES}
 )
 
 target_link_libraries(${TARGET_NAME} PRIVATE ${LINKS_LIBS})
