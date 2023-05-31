@@ -12,6 +12,37 @@ int main()
     XF_LOG(INFO, "Hello TensorRT");
     XF_LOG(INFO, "This is a TensorRT deploy project");
     auto infer = xf::create_inference("a");
-    if (infer != nullptr)
-        infer->Forward();
+    if (infer == nullptr)
+    {
+        XF_LOG(INFO, "load model failed!");
+        return -1;
+    }
+
+    auto infera = xf::create_inference("a");
+    if (infera == nullptr)
+    {
+        XF_LOG(INFO, "load model failed!");
+        return -1;
+    }
+
+    //并行
+    auto fa = infer->Forward("a");
+    auto fb = infer->Forward("b");
+    auto fc = infer->Forward("c");
+    auto fd = infer->Forward("d");
+    printf("%s \n", fa.get().c_str());
+    printf("%s \n", fb.get().c_str());
+    printf("%s \n", fc.get().c_str());
+    printf("%s \n", fd.get().c_str());
+
+    //串行
+    auto faa = infera->Forward("a").get();
+    auto fab = infera->Forward("b").get();
+    auto fac = infera->Forward("c").get();
+    auto fad = infera->Forward("d").get();
+    printf("%s \n", faa.c_str());
+    printf("%s \n", fab.c_str());
+    printf("%s \n", fac.c_str());
+    printf("%s \n", fad.c_str());
+    return 0;
 }
