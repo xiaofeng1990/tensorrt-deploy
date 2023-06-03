@@ -55,17 +55,49 @@ include_directories(..)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
+
+
+find_package(CUDA REQUIRED)
+if(CUDA_FOUND)
+    message(STATUS "CUDA library status:")
+    message(STATUS "    version: ${CUDA_VERSION}")
+    message(STATUS "    include path: ${CUDA_INCLUDE_DIRS}")
+    message(STATUS "    lib path: ${CUDA_LIBRARIES}")
+    message(STATUS "    install path: ${CUDA_TOOLKIT_ROOT_DIR}")
+    message(STATUS "    CUDA_ARCHITECTURES: ${CUDA_ARCHITECTURES}")
+    set(CMAKE_CUDA_COMPILER ${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc) 
+    enable_language(CUDA)
+    include_directories(${CUDA_INCLUDE_DIRS})
+    set(LINKS_LIBS ${LINKS_LIBS} ${CUDA_LIBRARIES} -lcuda)
+else(CUDA_FOUND)
+    message(FATA_ERROR "Do not find CUDA")
+endif(CUDA_FOUND)
+
+
+find_path(TENSORRT_INCLUDE_DIR NvInfer.h)
+message(STATUS "Found TensorRT headers at ${TENSORRT_INCLUDE_DIR}")
+find_library(TENSORRT_LIBRARY_INFER nvinfer)
+message(STATUS "Found TensorRT lib at ${TENSORRT_LIBRARY_INFER}")
+find_library(TENSORRT_LIBRARY_ONNXPARSER nvonnxparser)
+message(STATUS "Found TensorRT lib at ${TENSORRT_LIBRARY_ONNXPARSER}")
+include_directories(${TENSORRT_INCLUDE_DIR})
+set(LINKS_LIBS ${LINKS_LIBS} ${TENSORRT_LIBRARY_INFER} ${TENSORRT_LIBRARY_ONNXPARSER})
+
+
 aux_source_directory(${PROJECT_SOURCE_DIR}/common       COMMON_SRC_FILES)
 aux_source_directory(${PROJECT_SOURCE_DIR}/inference    INFER_SRC_FILES)
+aux_source_directory(${PROJECT_SOURCE_DIR}/tensorrt     TRT_SRC_FILES)
+
 set(TARGET_NAME xf_deploy)
 
-add_executable(${TARGET_NAME}
+cuda_add_executable(${TARGET_NAME}
     main.cpp config_env.cpp
     ${COMMON_SRC_FILES}
     ${INFER_SRC_FILES}
+    ${TRT_SRC_FILES}
 )
 
-target_link_libraries(${TARGET_NAME} PRIVATE ${LINKS_LIBS})
+target_link_libraries(${TARGET_NAME} ${LINKS_LIBS})
 
 # install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

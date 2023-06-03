@@ -1,9 +1,12 @@
+#include "common/config_helper.h"
 #include "common/logging.h"
 #include "config_env.h"
 #include "inference/inference.h"
+#include "tensorrt/builder.h"
 #include "version.h"
 #include <iostream>
 #include <string>
+
 int main()
 {
     XF_LOG(INFO, "ai serving version: %s", XF_VERSION);
@@ -11,6 +14,14 @@ int main()
     config_env.Init();
     XF_LOG(INFO, "Hello TensorRT");
     XF_LOG(INFO, "This is a TensorRT deploy project");
+
+    // config log
+    xffw::XfConfig *config = xffw::ConfigHelper::Ins();
+
+    std::string model_file;
+    config->Get("inference", "model_file", model_file);
+    trt::Builder builder;
+    builder.Compile(trt::Mode::FP16, 5, model_file, "./yolov5s.engine");
     auto infer = xf::create_inference("a");
     if (infer == nullptr)
     {

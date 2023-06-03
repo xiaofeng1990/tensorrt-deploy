@@ -1,5 +1,5 @@
 # model
-*.onnx
+models
 output
 log
 

@@ -5,7 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/usr/include/glib-2.0",
-                "/usr/lib/aarch64-linux-gnu/glib-2.0/include/"
+                "/usr/lib/aarch64-linux-gnu/glib-2.0/include/",
+                "/usr/local/cuda-10.2/targets/aarch64-linux/include",
+                "${workspaceFolder}/master"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
