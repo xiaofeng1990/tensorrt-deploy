@@ -83,6 +83,8 @@
         "typeindex": "cpp",
         "valarray": "cpp",
         "*.in": "cpp",
-        "__functional_03": "cpp"
+        "__functional_03": "cpp",
+        "filesystem": "cpp",
+        "stack": "cpp"
     }
 }

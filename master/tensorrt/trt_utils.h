@@ -53,5 +53,7 @@ bool exists(const std::string filepath);
 std::string join_dims(const std::vector<int> dims);
 std::string dims_str(const nvinfer1::Dims dims);
 std::string format(const char *fmt, ...);
+inline uint32_t get_element_size(nvinfer1::DataType t) noexcept;
+inline int64_t volume(const nvinfer1::Dims &d);
 } // namespace trt
 #endif

@@ -2,7 +2,7 @@
 #include "common/logging.h"
 #include "config_env.h"
 #include "inference/inference.h"
-#include "tensorrt/builder.h"
+
 #include "version.h"
 #include <iostream>
 #include <string>
@@ -20,8 +20,7 @@ int main()
 
     std::string model_file;
     config->Get("inference", "model_file", model_file);
-    trt::Builder builder;
-    builder.Compile(trt::Mode::FP16, 5, model_file, "./yolov5s.engine");
+
     auto infer = xf::create_inference("a");
     if (infer == nullptr)
     {
