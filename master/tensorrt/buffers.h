@@ -1,9 +1,9 @@
 #ifndef MASTER_TENSORRT_BUFFERS_H_
 #define MASTER_TENSORRT_BUFFERS_H_
+#include "trt_utils.h"
 #include <NvInfer.h>
 #include <memory>
 #include <vector>
-
 namespace trt {
 //!
 //! \brief  The GenericBuffer class is a templated class for buffers.
@@ -35,7 +35,7 @@ class GenericBuffer {
     //!
     GenericBuffer(size_t size, nvinfer1::DataType type) : size_(size), capacity_(size), type_(type)
     {
-        if (!alloc_fn_(&buffer_, this->nbBytes()))
+        if (!alloc_fn_(&buffer_, this->nb_bytes()))
         {
             throw std::bad_alloc();
         }
@@ -73,7 +73,7 @@ class GenericBuffer {
     // Returns the size (in number of elements) of the buffer.
     size_t size() const { return size_; }
     // Returns the size(in bytes) of the buffer.
-    size_t nbBytes() const { return this->size() * get_element_size(type_); }
+    size_t nb_bytes() const { return this->size() * get_element_size(type_); }
     // Resizes the buffer. This is a no-op if the new size is smaller than or equal to the current capacity.
     void resize(size_t new_size)
     {
@@ -81,7 +81,7 @@ class GenericBuffer {
         if (capacity_ < new_size)
         {
             free_fn_(buffer_);
-            if (alloc_fn_(&buffer_, this->nbBytes()))
+            if (alloc_fn_(&buffer_, this->nb_bytes()))
             {
                 throw std::bad_alloc();
             }
@@ -89,7 +89,7 @@ class GenericBuffer {
         }
     }
 
-    void resize(const nvinfer1::Dims &dims) { return this->resize(samplesCommon::volume(dims)); }
+    void resize(const nvinfer1::Dims &dims) { return this->resize(trt::volume(dims)); }
 
   private:
     size_t size_{0};
@@ -158,11 +158,17 @@ class BufferManager {
     //!        Returns nullptr if no such tensor can be found.
     //!
     void *GetDeviceBuffer(const std::string &tensor_name) const;
+    void *GetDeviceInputBuffer() const;
+    void *GetDeviceOutputBuffer() const;
+    void SetDeviceInputBuffer();
     //!
     //! \brief Returns the host buffer corresponding to tensorName.
     //!        Returns nullptr if no such tensor can be found.
     //!
     void *GetHostBuffer(const std::string &tensor_name) const;
+    void *GetHostInputBuffer() const;
+    void *GetHostOutputBuffer() const;
+
     //!
     //! \brief Returns the size of the host and device buffers that correspond to tensorName.
     //!        Returns kINVALID_SIZE_VALUE if no such tensor can be found.
@@ -185,6 +191,8 @@ class BufferManager {
     //! \brief Copy the contents of output device buffers to output host buffers asynchronously.
     //!
     void CopyOutputToHostAsync(const cudaStream_t &stream = 0);
+    std::string GetInputTensorName();
+    std::string GetOutputTensorName();
 
   private:
     void *GetBuffer(const bool is_host, const std::string &tensor_name) const;
@@ -196,10 +204,12 @@ class BufferManager {
     std::shared_ptr<nvinfer1::ICudaEngine> engine_;
     //!< The batch size for legacy networks, 0 otherwise.
     int batch_size_;
-    //!< The vector of pointers to managed buffers
+    //!< The vector of pointers to managed buffers， input and output
     std::vector<std::unique_ptr<ManagedBuffer>> managed_buffers_;
     //!< The vector of device buffers needed for engine execution
     std::vector<void *> device_bindings_;
+    std::string input_tensort_name_;
+    std::string output_tensort_name_;
 };
 
 template <typename T>

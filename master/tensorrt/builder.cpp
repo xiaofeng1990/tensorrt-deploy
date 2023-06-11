@@ -8,36 +8,6 @@
 #include <cuda_runtime.h>
 namespace trt {
 
-class Logger : public nvinfer1::ILogger {
-  public:
-    virtual void log(Severity severity, const char *msg) noexcept override
-    {
-        switch (severity)
-        {
-        case Severity::kINTERNAL_ERROR:
-            XF_LOGT(ERROR, TAG, "NVInfer INTERNAL_ERROR: %s", msg);
-            abort();
-            break;
-        case Severity::kERROR:
-            XF_LOGT(ERROR, TAG, "NVInfer: %s", msg);
-            break;
-        case Severity::kWARNING:
-            XF_LOGT(WARN, TAG, "NVInfer: %s", msg);
-            break;
-        // case Severity::kINFO:
-        //     XF_LOGT(INFO, TAG, "NVInfer: %s", msg);
-        // case Severity::kVERBOSE:
-        //     XF_LOGT(DEBUG, TAG, "NVInfer: %s", msg);
-        //     break;
-        default:
-            break;
-        }
-    }
-
-  private:
-    static constexpr const char *TAG = "tlt_loger";
-};
-
 static Logger gLogger;
 
 Builder::Builder(/* args */) {}
@@ -113,7 +83,7 @@ bool Builder::Compile(Mode mode, unsigned int max_batch_size, const std::string 
         XF_LOGT(ERROR, TAG, "engine is nullptr");
         return false;
     }
-    XF_LOGT(INFO, TAG, "Build engine done %lld s !", timer.Stop()/1000);
+    XF_LOGT(INFO, TAG, "Build engine done %lld s !", timer.Stop() / 1000);
     // serialize the engine, then close everything down
     auto seridata = UniquePtr<nvinfer1::IHostMemory>(engine->serialize());
     // save file
