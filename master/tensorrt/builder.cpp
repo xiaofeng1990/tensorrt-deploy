@@ -1,6 +1,7 @@
 #include "builder.h"
 #include "common/logging.h"
 #include "common/timer.h"
+#include "trt_logger.h"
 #include "trt_utils.h"
 #include <NvInfer.h>
 #include <NvInferPlugin.h>

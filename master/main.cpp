@@ -6,6 +6,7 @@
 #include "tensorrt/buffers.h"
 #include "tensorrt/builder.h"
 #include "tensorrt/cuda_tools.h"
+#include "tensorrt/trt_logger.h"
 #include "version.h"
 #include <fstream>
 #include <iostream>
