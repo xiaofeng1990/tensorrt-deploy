@@ -18,7 +18,6 @@ Builder::~Builder() {}
 bool Builder::Compile(Mode mode, unsigned int max_batch_size, const std::string onnx_file,
                       const std::string engine_file, const size_t max_workspace_size)
 {
-
     if (exists(engine_file.c_str()))
     {
         // 计算engine 文件的 md5

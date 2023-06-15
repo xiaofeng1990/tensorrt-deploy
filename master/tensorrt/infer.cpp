@@ -4,11 +4,49 @@
 #include "trt_utils.h"
 #include <fstream>
 #include <iostream>
+
 namespace trt
 
 {
-//单个图像推理
-void Infer::Inference(bool sync = true) {}
+
+Infer::~Infer() { Destroy(); }
+//同步图像推理
+bool Infer::Inference(std::vector<cv::Mat> images)
+{
+    // Memcpy from host input buffers to device input buffers
+    // set mem to input host
+    // copy host mem to device mem
+    buffers_->CopyInputToDevice();
+
+    // Synchronously execute inference a network.
+    bool status = context_->executeV2(buffers_->GetDeviceBindings().data());
+    if (!status)
+    {
+        return false;
+    }
+
+    // Memcpy from device output buffers to host output buffers
+    buffers_->CopyOutputToHost();
+    // return output host mem
+    return true;
+}
+
+//异步推理
+bool Infer::InferenceAsync(std::vector<cv::Mat> images)
+{
+    // Memcpy from host input buffers to device input buffers
+    // set mem to input host
+    // copy host mem to device mem
+    buffers_->CopyInputToDeviceAsync(stream_);
+    //异步推理
+    bool success = context_->enqueueV2(buffers_->GetDeviceBindings().data(), stream_, nullptr);
+    // Memcpy from device output buffers to host output buffers
+    buffers_->CopyOutputToHostAsync(stream_);
+    SynchronizeStream();
+
+    // return output host mem
+    return true;
+}
 // batch 推理
 
 std::vector<unsigned char> Infer::LoadEngine(std::string engine_file)
@@ -58,7 +96,10 @@ bool Infer::LoadModel(std::string engine_file)
         XF_LOGT(ERROR, TAG, "Create context failed!");
         return false;
     }
-    buffers_.reset(new BufferManager(engine_));
+    max_batch_size_ = engine_->getMaxBatchSize();
+    buffers_.reset(new BufferManager(engine_, max_batch_size_));
+    input_tensort_name_ = buffers_->GetInputTensorName();
+    output_tensort_name_ = buffers_->GetOutputTensorName();
     model_status_ = true;
     return true;
 }
@@ -66,6 +107,16 @@ bool Infer::LoadModel(std::string engine_file)
 //获取模型属性  input_name output_name batch
 
 //同步stream
-void Infer::SynchronizeStream() {}
+void Infer::SynchronizeStream() { checkRuntime(cudaStreamSynchronize(stream_)); }
 
+int Infer::GetMaxBatchSize() { return max_batch_size_; }
+
+void Infer::Destroy()
+{
+    // context_.reset();
+    // engine_.reset();
+    // runtime_.reset();
+    // buffers_.reset();
+    cudaStreamDestroy(stream_);
+}
 } // namespace trt

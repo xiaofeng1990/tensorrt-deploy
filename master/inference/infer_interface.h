@@ -5,7 +5,7 @@
 class InferInterface {
 
   public:
-    virtual std::shared_future<std::string> Forward(std::string image) = 0;
+    virtual std::shared_future<std::string> Commits(std::string image) = 0;
 };
 
 #endif //__MASTER_INFERENCE_INFER_INTERFACE_H_

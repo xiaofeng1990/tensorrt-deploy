@@ -7,24 +7,28 @@
 #include <cuda_runtime.h>
 #include <map>
 #include <memory>
+#include <opencv2/opencv.hpp>
 #include <string>
 #include <vector>
+
 namespace trt {
 class Infer {
   public:
     Infer() = default;
     ~Infer() = default;
     //单个图像推理
-    void Inference(bool sync = true);
+    bool Inference(std::vector<cv::Mat> images);
+    bool InferenceAsync(std::vector<cv::Mat> images);
     // batch 推理
 
     //接在engine文件到context
 
     bool LoadModel(std::string engine_file);
     //获取模型属性  input_name output_name batch
-
+    void Destroy();
     //同步stream
     void SynchronizeStream();
+    int GetMaxBatchSize();
 
   private:
     std::vector<unsigned char> LoadEngine(std::string engine_file);
@@ -37,7 +41,9 @@ class Infer {
     cudaStream_t stream_ = nullptr;
     std::shared_ptr<BufferManager> buffers_{nullptr};
     // input output name shape
-    // memory
+    std::string input_tensort_name_;
+    std::string output_tensort_name_;
+    int max_batch_size_;
     static constexpr const char *TAG = "infer";
     TRTLogger gLogger;
 };
