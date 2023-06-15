@@ -83,5 +83,38 @@ std::string join_dims(const std::vector<int> dims);
 std::string dims_str(const nvinfer1::Dims dims);
 std::string format(const char *fmt, ...);
 
+// XX(num, name, string)
+#define TRT_STATUS_MAP(XX)                                                                                             \
+    XX(0, SUCCESS, 检测成功)                                                                                           \
+    XX(1, MESSAGE_FOAMAT_ERROR, 消息解析失败)                                                                          \
+    XX(2, NO_IAMGE, 图片不存在)                                                                                        \
+    XX(3, IAMGE_FORMAT_ERROR, 图片格式错误)                                                                            \
+    XX(4, INFERENE_ERROR, 推理失败)                                                                                    \
+    XX(5, IMAGE_DECODE_ERROR, 图片转码失败)                                                                            \
+    XX(6, IMAGE_TOO_BIG, 图片尺寸太大(最大4000x4000))                                                                  \
+    XX(7, NO_FIND_OBJ, 图片中没有检测目标)
+
+// XT_STATUS_##name
+enum trt_status {
+#define XX(num, name, string) TRT_STATUS_##name = num,
+    TRT_STATUS_MAP(XX)
+#undef XX
+        TRT_CUSTOM_STATUS
+};
+
+static const char *trt_status_str(enum trt_status status)
+{
+    switch (status)
+    {
+#define XX(num, name, string)                                                                                          \
+    case TRT_STATUS_##name:                                                                                            \
+        return #string;
+        TRT_STATUS_MAP(XX)
+#undef XX
+    default:
+        return "<unknown>";
+    }
+}
+
 } // namespace trt
 #endif

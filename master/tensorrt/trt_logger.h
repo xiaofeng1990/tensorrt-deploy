@@ -4,7 +4,7 @@
 #include <NvInfer.h>
 namespace trt {
 
-class Logger : public nvinfer1::ILogger {
+class TRTLogger : public nvinfer1::ILogger {
   public:
     virtual void log(Severity severity, const char *msg) noexcept override
     {

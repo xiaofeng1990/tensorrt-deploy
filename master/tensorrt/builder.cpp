@@ -9,7 +9,7 @@
 #include <cuda_runtime.h>
 namespace trt {
 
-static Logger gLogger;
+static TRTLogger gLogger;
 
 Builder::Builder(/* args */) {}
 
