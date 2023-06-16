@@ -97,7 +97,7 @@ bool Infer::LoadModel(std::string engine_file)
         return false;
     }
     max_batch_size_ = engine_->getMaxBatchSize();
-    buffers_.reset(new BufferManager(engine_, max_batch_size_));
+    buffers_.reset(new EngineBufferManager(engine_, max_batch_size_));
     input_tensort_name_ = buffers_->GetInputTensorName();
     output_tensort_name_ = buffers_->GetOutputTensorName();
     model_status_ = true;

@@ -1,67 +1,62 @@
 #include "common/config_helper.h"
 #include "common/logging.h"
 #include "config_env.h"
-#include "inference/inference.h"
-
-#include "tensorrt/buffers.h"
+#include "inference/yolo_infer.h"
 #include "tensorrt/builder.h"
 #include "tensorrt/cuda_tools.h"
+#include "tensorrt/engine_buffers.h"
 #include "tensorrt/trt_logger.h"
-#include "version.h"
+#include "tensorrt/trt_utils.h"
+// #include "version.h"
 #include <fstream>
 #include <iostream>
 #include <string>
-std::vector<unsigned char> load_file(const std::string file)
-{
-    std::ifstream in(file, std::ios::in | std::ios::binary);
-    if (!in.is_open())
-        return {};
-    in.seekg(0, std::ios::end);
-    size_t length = in.tellg();
-    std::vector<uint8_t> data;
-    if (length > 0)
-    {
-        in.seekg(0, std::ios::beg);
-        data.resize(length);
-        in.read((char *)&data[0], length);
-    }
-    in.close();
-    return data;
-}
 
 int main()
 {
-    trt::Logger gLogger;
-    XF_LOG(INFO, "ai serving version: %s", XF_VERSION);
-    xf::ConfigEnv config_env;
-    config_env.Init();
-    XF_LOG(INFO, "Hello TensorRT");
-    XF_LOG(INFO, "This is a TensorRT deploy project");
-
     // config log
     xffw::XfConfig *config = xffw::ConfigHelper::Ins();
 
-    std::string model_file;
-    config->Get("inference", "model_file", model_file);
-    std::string engine_file("./models/yolov5s.engine");
+    trt::InferConfig infer_config;
 
-    auto engine_data = load_file(engine_file);
-    auto runtime = trt::make_shared_ptr(nvinfer1::createInferRuntime(gLogger));
+    config->Get("inference", "model_file", infer_config.model_path);
 
-    auto engine = trt::make_shared_ptr(runtime->deserializeCudaEngine(engine_data.data(), engine_data.size()));
-    if (engine == nullptr)
-    {
-        printf("Deserialize cuda engine failed.\n");
-        runtime->destroy();
-        return -1;
-    }
-    cudaStream_t stream = nullptr;
-    checkRuntime(cudaStreamCreate(&stream));
-    trt::BufferManager buffers(engine);
-    auto context = trt::make_shared_ptr(engine->createExecutionContext());
+    config->Get("inference", "max_batch_size", infer_config.max_batch_size);
+    config->Get("inference", "confidence_threshold", infer_config.conf_threshold);
+    config->Get("inference", "iou_threshold", infer_config.iou_threshold);
+    auto infer = xf::create_inference(infer_config);
 
     return 0;
 }
+
+// trt::Logger gLogger;
+//     XF_LOG(INFO, "ai serving version: %s", XF_VERSION);
+//     xf::ConfigEnv config_env;
+//     config_env.Init();
+//     XF_LOG(INFO, "Hello TensorRT");
+//     XF_LOG(INFO, "This is a TensorRT deploy project");
+
+//     // config log
+//     xffw::XfConfig *config = xffw::ConfigHelper::Ins();
+
+//     std::string model_file;
+//     config->Get("inference", "model_file", model_file);
+//     std::string engine_file("./models/yolov5s.engine");
+
+//     auto engine_data = load_file(engine_file);
+//     auto runtime = trt::make_shared_ptr(nvinfer1::createInferRuntime(gLogger));
+
+//     auto engine = trt::make_shared_ptr(runtime->deserializeCudaEngine(engine_data.data(), engine_data.size()));
+//     if (engine == nullptr)
+//     {
+//         printf("Deserialize cuda engine failed.\n");
+//         runtime->destroy();
+//         return -1;
+//     }
+//     cudaStream_t stream = nullptr;
+//     checkRuntime(cudaStreamCreate(&stream));
+//     trt::BufferManager buffers(engine);
+//     auto context = trt::make_shared_ptr(engine->createExecutionContext());
 
 //  auto infer = xf::create_inference("a");
 //     if (infer == nullptr)

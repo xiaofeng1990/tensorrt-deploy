@@ -10,13 +10,10 @@
 namespace trt {
 
 static TRTLogger gLogger;
+static constexpr const char *TAG = "builder";
 
-Builder::Builder(/* args */) {}
-
-Builder::~Builder() {}
-
-bool Builder::Compile(Mode mode, unsigned int max_batch_size, const std::string onnx_file,
-                      const std::string engine_file, const size_t max_workspace_size)
+bool builder_engine(Mode mode, unsigned int max_batch_size, const std::string onnx_file, const std::string engine_file,
+                    const size_t max_workspace_size)
 {
     if (exists(engine_file.c_str()))
     {
@@ -88,10 +85,10 @@ bool Builder::Compile(Mode mode, unsigned int max_batch_size, const std::string 
     auto seridata = UniquePtr<nvinfer1::IHostMemory>(engine->serialize());
     // save file
     // 计算engine 文件的 md5
-    return SaveEngineFile(engine_file, seridata->data(), seridata->size());
+    return save_engine_file(engine_file, seridata->data(), seridata->size());
 }
 
-const char *Builder::ModeTosString(Mode type)
+const char *mode_to_string(Mode type)
 {
     switch (type)
     {
@@ -106,7 +103,7 @@ const char *Builder::ModeTosString(Mode type)
     }
 }
 
-bool Builder::SaveEngineFile(const std::string engine_file, const void *data, size_t length)
+bool save_engine_file(const std::string engine_file, const void *data, size_t length)
 {
     FILE *f = fopen(engine_file.c_str(), "wb");
     if (!f)

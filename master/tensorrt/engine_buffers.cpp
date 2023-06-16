@@ -1,11 +1,11 @@
-#include "buffers.h"
+#include "engine_buffers.h"
 #include "cuda_tools.h"
 #include "trt_utils.h"
 #include <cassert>
 namespace trt {
 
-BufferManager::BufferManager(std::shared_ptr<nvinfer1::ICudaEngine> engine, const int batch_size,
-                             const nvinfer1::IExecutionContext *context)
+EngineBufferManager::EngineBufferManager(std::shared_ptr<nvinfer1::ICudaEngine> engine, const int batch_size,
+                                         const nvinfer1::IExecutionContext *context)
     : engine_(engine), batch_size_(batch_size)
 {
     assert(engine->hasImplicitBatchDimension() || batch_size_ == 0);
@@ -40,38 +40,41 @@ BufferManager::BufferManager(std::shared_ptr<nvinfer1::ICudaEngine> engine, cons
         managed_buffers_.emplace_back(std::move(man_buf));
     }
 }
-BufferManager::~BufferManager()
-{
-
-    engine_.reset();
-    managed_buffers_.clear();
-}
+// BufferManager::~BufferManager()
+// {
+//     if (engine_)
+//         engine_.reset();
+//     managed_buffers_.clear();
+// }
 //!
 //! \brief Returns a vector of device buffers that you can use directly as
 //!        bindings for the execute and enqueue methods of IExecutionContext.
 //!
-std::vector<void *> &BufferManager::GetDeviceBindings() { return device_bindings_; }
-const std::vector<void *> &BufferManager::GetDeviceBindings() const { return device_bindings_; }
+std::vector<void *> &EngineBufferManager::GetDeviceBindings() { return device_bindings_; }
+const std::vector<void *> &EngineBufferManager::GetDeviceBindings() const { return device_bindings_; }
 //!
 //! \brief Returns the device buffer corresponding to tensorName.
 //!        Returns nullptr if no such tensor can be found.
 //!
-void *BufferManager::GetDeviceBuffer(const std::string &tensor_name) const { return GetBuffer(false, tensor_name); }
-void *BufferManager::GetDeviceInputBuffer() const { return GetBuffer(false, input_tensort_name_); }
-void *BufferManager::GetDeviceOutputBuffer() const { return GetBuffer(false, output_tensort_name_); }
+void *EngineBufferManager::GetDeviceBuffer(const std::string &tensor_name) const
+{
+    return GetBuffer(false, tensor_name);
+}
+void *EngineBufferManager::GetDeviceInputBuffer() const { return GetBuffer(false, input_tensort_name_); }
+void *EngineBufferManager::GetDeviceOutputBuffer() const { return GetBuffer(false, output_tensort_name_); }
 
 //!
 //! \brief Returns the host buffer corresponding to tensorName.
 //!        Returns nullptr if no such tensor can be found.
 //!
-void *BufferManager::GetHostBuffer(const std::string &tensor_name) const { return GetBuffer(true, tensor_name); }
-void *BufferManager::GetHostInputBuffer() const { return GetBuffer(true, input_tensort_name_); }
-void *BufferManager::GetHostOutputBuffer() const { return GetBuffer(true, output_tensort_name_); }
+void *EngineBufferManager::GetHostBuffer(const std::string &tensor_name) const { return GetBuffer(true, tensor_name); }
+void *EngineBufferManager::GetHostInputBuffer() const { return GetBuffer(true, input_tensort_name_); }
+void *EngineBufferManager::GetHostOutputBuffer() const { return GetBuffer(true, output_tensort_name_); }
 //!
 //! \brief Returns the size of the host and device buffers that correspond to tensorName.
 //!        Returns kINVALID_SIZE_VALUE if no such tensor can be found.
 //!
-size_t BufferManager::Size(const std::string &tensor_name) const
+size_t EngineBufferManager::Size(const std::string &tensor_name) const
 {
     int index = engine_->getBindingIndex(tensor_name.c_str());
     if (index == -1)
@@ -82,7 +85,7 @@ size_t BufferManager::Size(const std::string &tensor_name) const
 //! \brief Dump host buffer with specified tensorName to ostream.
 //!        Prints error message to std::ostream if no such tensor can be found.
 //!
-void BufferManager::DumpBuffer(std::ostream &os, const std::string &tensorName)
+void EngineBufferManager::DumpBuffer(std::ostream &os, const std::string &tensorName)
 {
     // int index = engine_->getBindingIndex(tensorName.c_str());
     // if (index == -1)
@@ -95,26 +98,32 @@ void BufferManager::DumpBuffer(std::ostream &os, const std::string &tensorName)
     // nvinfer1::Dims buf_dims = engine_->getBindingDimensions(index);
 }
 
-void BufferManager::CopyInputToDevice() { MemcpyBuffers(true, false, false); }
-void BufferManager::CopyOutputToHost() { MemcpyBuffers(false, true, false); }
+void EngineBufferManager::CopyInputToDevice() { MemcpyBuffers(true, false, false); }
+void EngineBufferManager::CopyOutputToHost() { MemcpyBuffers(false, true, false); }
 //!
 //! \brief Copy the contents of input host buffers to input device buffers asynchronously.
 //!
-void BufferManager::CopyInputToDeviceAsync(const cudaStream_t &stream) { MemcpyBuffers(true, false, true, stream); }
+void EngineBufferManager::CopyInputToDeviceAsync(const cudaStream_t &stream)
+{
+    MemcpyBuffers(true, false, true, stream);
+}
 //!
 //! \brief Copy the contents of output device buffers to output host buffers asynchronously.
 //!
-void BufferManager::CopyOutputToHostAsync(const cudaStream_t &stream) { MemcpyBuffers(false, true, true, stream); }
+void EngineBufferManager::CopyOutputToHostAsync(const cudaStream_t &stream)
+{
+    MemcpyBuffers(false, true, true, stream);
+}
 
-void *BufferManager::GetBuffer(const bool is_host, const std::string &tensor_name) const
+void *EngineBufferManager::GetBuffer(const bool is_host, const std::string &tensor_name) const
 {
     int index = engine_->getBindingIndex(tensor_name.c_str());
     if (index == -1)
         return nullptr;
     return (is_host ? managed_buffers_[index]->host_buffer_.data() : managed_buffers_[index]->device_buffer_.data());
 }
-void BufferManager::MemcpyBuffers(const bool copy_input, const bool device_to_host, const bool async,
-                                  const cudaStream_t &stream)
+void EngineBufferManager::MemcpyBuffers(const bool copy_input, const bool device_to_host, const bool async,
+                                        const cudaStream_t &stream)
 {
     for (int i = 0; i < engine_->getNbBindings(); i++)
     {
@@ -139,7 +148,7 @@ void BufferManager::MemcpyBuffers(const bool copy_input, const bool device_to_ho
     }
 }
 
-std::string BufferManager::GetInputTensorName() { return input_tensort_name_; }
-std::string BufferManager::GetOutputTensorName() { return output_tensort_name_; }
-void BufferManager::SetDeviceInputBuffer() {}
+std::string EngineBufferManager::GetInputTensorName() { return input_tensort_name_; }
+std::string EngineBufferManager::GetOutputTensorName() { return output_tensort_name_; }
+void EngineBufferManager::SetDeviceInputBuffer() {}
 } // namespace trt

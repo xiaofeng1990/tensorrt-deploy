@@ -19,6 +19,13 @@ constexpr long long int operator"" _GiB(unsigned long long val) { return val * (
 constexpr long long int operator"" _MiB(unsigned long long val) { return val * (1 << 20); }
 constexpr long long int operator"" _KiB(unsigned long long val) { return val * (1 << 10); }
 
+typedef struct _InferConfig {
+    float conf_threshold;
+    float iou_threshold;
+    int max_batch_size;
+    std::string model_path;
+} InferConfig;
+
 struct InferDeleter {
     template <typename T>
     void operator()(T *obj) const

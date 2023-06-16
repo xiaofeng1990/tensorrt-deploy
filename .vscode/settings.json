@@ -85,7 +85,8 @@
         "*.in": "cpp",
         "__functional_03": "cpp",
         "filesystem": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "cassert": "cpp"
     },
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"

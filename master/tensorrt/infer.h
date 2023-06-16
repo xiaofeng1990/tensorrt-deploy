@@ -1,7 +1,7 @@
 #ifndef MASTER_TENSORRT_INFER_H_
 #define MASTER_TENSORRT_INFER_H_
 
-#include "buffers.h"
+#include "engine_buffers.h"
 #include "trt_logger.h"
 #include <NvInfer.h>
 #include <cuda_runtime.h>
@@ -39,7 +39,7 @@ class Infer {
     std::shared_ptr<nvinfer1::IRuntime> runtime_{nullptr};
     std::shared_ptr<nvinfer1::IExecutionContext> context_{nullptr};
     cudaStream_t stream_ = nullptr;
-    std::shared_ptr<BufferManager> buffers_{nullptr};
+    std::shared_ptr<EngineBufferManager> buffers_{nullptr};
     // input output name shape
     std::string input_tensort_name_;
     std::string output_tensort_name_;
