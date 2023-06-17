@@ -55,7 +55,18 @@ include_directories(..)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
-
+find_package(OpenCV  REQUIRED)
+if(OpenCV_FOUND)
+    
+    message(STATUS "OpenCV library status:")
+    message(STATUS "    version: ${OpenCV_VERSION}")
+    message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
+    message(STATUS "    lib : ${OpenCV_LIBS}")
+    include_directories(${OpenCV_INCLUDE_DIRS})
+    set(LINKS_LIBS ${LINKS_LIBS} ${OpenCV_LIBS})
+else()
+    message(FATA_ERROR "Do not find OpenCV")
+endif()
 
 find_package(CUDA REQUIRED)
 if(CUDA_FOUND)

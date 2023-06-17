@@ -29,6 +29,7 @@ class Infer {
     //同步stream
     void SynchronizeStream();
     int GetMaxBatchSize();
+    void GetModelProperty();
 
   private:
     std::vector<unsigned char> LoadEngine(std::string engine_file);
@@ -44,6 +45,8 @@ class Infer {
     std::string input_tensort_name_;
     std::string output_tensort_name_;
     int max_batch_size_;
+    int opt_batch_size_;
+    int min_batch_size_;
     static constexpr const char *TAG = "infer";
     TRTLogger gLogger;
 };

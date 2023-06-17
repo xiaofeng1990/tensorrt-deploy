@@ -4,16 +4,26 @@
 #include <cassert>
 namespace trt {
 
-EngineBufferManager::EngineBufferManager(std::shared_ptr<nvinfer1::ICudaEngine> engine, const int batch_size,
-                                         const nvinfer1::IExecutionContext *context)
+EngineBufferManager::EngineBufferManager(std::shared_ptr<nvinfer1::ICudaEngine> engine, const int batch_size)
     : engine_(engine), batch_size_(batch_size)
 {
-    assert(engine->hasImplicitBatchDimension() || batch_size_ == 0);
+    // assert(engine->hasImplicitBatchDimension() || batch_size_ == 0);
     // Create host and device buffers input and output
+
     for (int i = 0; i < engine->getNbBindings(); i++)
     {
-        auto dims = context ? context->getBindingDimensions(i) : engine_->getBindingDimensions(i);
-        size_t vol = context || !batch_size_ ? 1 : static_cast<size_t>(batch_size_);
+        auto dims = engine_->getBindingDimensions(i);
+        size_t vol = 0;
+        if (dims.d[0] <= 0)
+        {
+            dims.d[0] = 1;
+            vol = static_cast<size_t>(batch_size_);
+        }
+        else
+        {
+            vol = 1;
+        }
+
         nvinfer1::DataType type = engine_->getBindingDataType(i);
         if (engine_->bindingIsInput(i))
         {
@@ -31,6 +41,7 @@ EngineBufferManager::EngineBufferManager(std::shared_ptr<nvinfer1::ICudaEngine> 
             dims.d[vec_dim] = div_up(dims.d[vec_dim], scalars_per_vec);
             vol *= scalars_per_vec;
         }
+
         vol *= volume(dims);
         std::unique_ptr<ManagedBuffer> man_buf{new ManagedBuffer()};
         man_buf->device_buffer_ = DeviceBuffer(vol, type);

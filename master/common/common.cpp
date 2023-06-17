@@ -1,10 +1,10 @@
 #include "common.h"
+#include "md5.h"
 #include <dirent.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-
 namespace xffw {
 
 size_t GetExecutablePath(std::string &processdir, std::string &processname)
@@ -51,6 +51,30 @@ bool IsDir(std::string path)
         return true;
     }
     return false;
+}
+
+std::string file_md5(const std::string &file)
+{
+    std::ifstream in(file.c_str(), std::ios::binary);
+    if (!in)
+    {
+        return {};
+    }
+
+    xf::MD5 md5;
+    std::streamsize length;
+    char buffer[1024];
+    while (!in.eof())
+    {
+        in.read(buffer, 1024);
+        length = in.gcount();
+        if (length > 0)
+        {
+            md5.update(buffer, length);
+        }
+    }
+    in.close();
+    return md5.toString();
 }
 
 // string path = "./my_directory/my_file.txt";

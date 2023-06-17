@@ -20,8 +20,7 @@ class EngineBufferManager {
 
   public:
     static const size_t kINVALID_SIZE_VALUE = ~size_t(0);
-    EngineBufferManager(std::shared_ptr<nvinfer1::ICudaEngine> engine, const int batch_size = 0,
-                        const nvinfer1::IExecutionContext *context = nullptr);
+    EngineBufferManager(std::shared_ptr<nvinfer1::ICudaEngine> engine, const int batch_size = 0);
     ~EngineBufferManager() = default;
     //!
     //! \brief Returns a vector of device buffers that you can use directly as

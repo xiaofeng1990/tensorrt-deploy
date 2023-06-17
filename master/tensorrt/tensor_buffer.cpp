@@ -42,17 +42,17 @@ void TensorBufferManager::CopyToHost() { MemcpyBuffers(true, false); }
 //!
 //! \brief Copy the contents of input host buffers to input device buffers asynchronously.
 //!
-void TensorBufferManager::CopyToDeviceAsync(const cudaStream_t &stream = 0) { MemcpyBuffers(false, true, stream); }
+void TensorBufferManager::CopyToDeviceAsync(const cudaStream_t &stream) { MemcpyBuffers(false, true, stream); }
 //!
 //! \brief Copy the contents of output device buffers to output host buffers asynchronously.
 //!
-void TensorBufferManager::CopyToHostAsync(const cudaStream_t &stream = 0) { MemcpyBuffers(true, true, stream); }
+void TensorBufferManager::CopyToHostAsync(const cudaStream_t &stream) { MemcpyBuffers(true, true, stream); }
 
 void *TensorBufferManager::GetBuffer(const bool is_host) const
 {
     return is_host ? managed_buffers_->host_buffer_.data() : managed_buffers_->device_buffer_.data();
 }
-void TensorBufferManager::MemcpyBuffers(const bool device_to_host, const bool async, const cudaStream_t &stream = 0)
+void TensorBufferManager::MemcpyBuffers(const bool device_to_host, const bool async, const cudaStream_t &stream)
 {
     void *dst_ptr = device_to_host ? managed_buffers_->host_buffer_.data() : managed_buffers_->device_buffer_.data();
     void *src_ptr = device_to_host ? managed_buffers_->device_buffer_.data() : managed_buffers_->host_buffer_.data();

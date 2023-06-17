@@ -13,7 +13,7 @@ bool builder_engine(Mode mode, unsigned int max_batch_size, const std::string on
 
 const char *mode_to_string(Mode type);
 bool save_engine_file(const std::string engine_file, const void *data, size_t length);
-
+bool compare_md5_is_diff(std::string model_path);
 } // namespace trt
 
 #endif

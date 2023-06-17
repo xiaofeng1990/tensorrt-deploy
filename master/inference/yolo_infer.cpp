@@ -32,7 +32,7 @@ class YoloImpl : public InferInterface {
     std::condition_variable condition_;
     int max_batch_size_;
     trt::Infer infer_;
-    static constexpr const char *TAG = "scheduler";
+    static constexpr const char *TAG = "yolo_infer";
 };
 YoloImpl::~YoloImpl()
 {
@@ -157,6 +157,7 @@ std::shared_ptr<InferInterface> create_inference(trt::InferConfig infer_config)
     auto folder = xffw::GetDirectory(infer_config.model_path);
     auto filename = xffw::GetFileNameFromPath(infer_config.model_path);
     std::string engine_name = folder + "/" + filename + ".engine";
+    
     //生成engine文件
     trt::builder_engine(trt::FP16, infer_config.max_batch_size, infer_config.model_path, engine_name);
 

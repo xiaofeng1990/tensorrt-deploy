@@ -1,4 +1,5 @@
 #include "builder.h"
+#include "common/common.h"
 #include "common/logging.h"
 #include "common/timer.h"
 #include "trt_logger.h"
@@ -7,6 +8,8 @@
 #include <NvInferPlugin.h>
 #include <NvOnnxParser.h>
 #include <cuda_runtime.h>
+#include <fstream>
+#include <iostream>
 namespace trt {
 
 static TRTLogger gLogger;
@@ -15,15 +18,13 @@ static constexpr const char *TAG = "builder";
 bool builder_engine(Mode mode, unsigned int max_batch_size, const std::string onnx_file, const std::string engine_file,
                     const size_t max_workspace_size)
 {
-    if (exists(engine_file.c_str()))
+    //计算onnx文件是否变化，如果变化，重新生成engine文件
+    if (!compare_md5_is_diff(onnx_file) && exists(engine_file.c_str()))
     {
-        // 计算engine 文件的 md5
-        //加载生成的md5
-        //比较md5
-        // 如果md5不同，重新生成engine文件
         XF_LOGT(INFO, TAG, "engine file %s has exists.\n", engine_file.c_str());
         return true;
     }
+    XF_LOGT(INFO, TAG, "engine file name %s\n", engine_file.c_str());
     // creat builder
     auto builder = UniquePtr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(gLogger));
 
@@ -124,4 +125,42 @@ bool save_engine_file(const std::string engine_file, const void *data, size_t le
     fclose(f);
     return true;
 }
+
+bool compare_md5_is_diff(std::string model_path)
+{
+    const auto md5 = xffw::file_md5(model_path);
+    XF_LOGT(DEBUG, TAG, "file: %s, md5: %s", model_path.c_str(), md5.c_str());
+    if (md5.empty())
+    {
+        return true;
+    }
+
+    const std::string model_md5_file = model_path + ".md5";
+    std::string exists_md5;
+    std::ifstream is(model_md5_file);
+    if (is.is_open())
+    {
+        is >> exists_md5;
+        XF_LOGT(DEBUG, TAG, "exists md5: %s", exists_md5.c_str());
+        is.close();
+        // Do not re-build engine for same model file
+        if (md5.compare(exists_md5) == 0)
+        {
+            return false;
+        }
+    }
+    // save md5
+    std::ofstream os;
+    os.open(model_md5_file, std::ios::out);
+    if (!os.is_open())
+    {
+        XF_LOGT(ERROR, TAG, "Open file(%s) fail, To re-build engine(1)", model_md5_file.c_str());
+        return true;
+    }
+    os << md5;
+    os.close();
+
+    return true;
+}
+
 } // namespace trt

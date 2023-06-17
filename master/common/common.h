@@ -24,6 +24,7 @@ std::vector<std::string> FindFilesForDir(const char *dir_name);
 std::string GetFileNameFromPath(std::string path);
 std::string GetDirectory(std::string path);
 bool IsDir(std::string path);
+std::string file_md5(const std::string &file);
 } // namespace xffw
 
 #endif // XFLOG_COMMON_H_

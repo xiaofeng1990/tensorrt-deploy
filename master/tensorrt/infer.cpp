@@ -96,16 +96,56 @@ bool Infer::LoadModel(std::string engine_file)
         XF_LOGT(ERROR, TAG, "Create context failed!");
         return false;
     }
-    max_batch_size_ = engine_->getMaxBatchSize();
-    buffers_.reset(new EngineBufferManager(engine_, max_batch_size_));
-    input_tensort_name_ = buffers_->GetInputTensorName();
-    output_tensort_name_ = buffers_->GetOutputTensorName();
+    //获取模型属性 batch size min pro max
+    GetModelProperty();
+    // buffers_.reset(new EngineBufferManager(engine_, max_batch_size_));
+    buffers_.reset(new EngineBufferManager(engine_));
+
     model_status_ = true;
     return true;
 }
 
 //获取模型属性  input_name output_name batch
+void Infer::GetModelProperty()
+{
+    for (int i = 0; i < engine_->getNbBindings(); i++)
+    {
+        auto dims = engine_->getBindingDimensions(i);
 
+        if (engine_->bindingIsInput(i))
+        {
+            // 动态batch
+            if (dims.d[0] <= 0)
+            {
+                int32_t profiles_number = engine_->getNbOptimizationProfiles();
+                auto dims = engine_->getProfileDimensions(i, 0, nvinfer1::OptProfileSelector::kMIN);
+                min_batch_size_ = dims.d[0];
+                dims = engine_->getProfileDimensions(i, 0, nvinfer1::OptProfileSelector::kOPT);
+                opt_batch_size_ = dims.d[0];
+                dims = engine_->getProfileDimensions(i, 0, nvinfer1::OptProfileSelector::kMAX);
+                max_batch_size_ = dims.d[0];
+            }
+            else
+            {
+                min_batch_size_ = dims.d[0];
+                opt_batch_size_ = dims.d[0];
+                max_batch_size_ = dims.d[0];
+            }
+            input_tensort_name_ = engine_->getBindingName(i);
+            XF_LOGT(INFO, TAG, "input tensort dim  %s", dims_str(dims).c_str());
+        }
+        else
+        {
+            output_tensort_name_ = engine_->getBindingName(i);
+            XF_LOGT(INFO, TAG, "output tensort dim  %s", dims_str(dims).c_str());
+        }
+    }
+    XF_LOGT(INFO, TAG, "min batch size [%d]", min_batch_size_);
+    XF_LOGT(INFO, TAG, "opt batch size [%d]", opt_batch_size_);
+    XF_LOGT(INFO, TAG, "max batch size [%d]", max_batch_size_);
+    XF_LOGT(INFO, TAG, "input tensort name [%s]", input_tensort_name_.c_str());
+    XF_LOGT(INFO, TAG, "output tensort name [%s]", output_tensort_name_.c_str());
+}
 //同步stream
 void Infer::SynchronizeStream() { checkRuntime(cudaStreamSynchronize(stream_)); }
 

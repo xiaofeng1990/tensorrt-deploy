@@ -7,7 +7,7 @@
 #include "tensorrt/engine_buffers.h"
 #include "tensorrt/trt_logger.h"
 #include "tensorrt/trt_utils.h"
-// #include "version.h"
+#include "version.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -15,6 +15,11 @@
 int main()
 {
     // config log
+    XF_LOG(INFO, "ai serving version: %s", XF_VERSION);
+    xf::ConfigEnv config_env;
+    config_env.Init();
+    XF_LOG(INFO, "Hello TensorRT");
+    XF_LOG(INFO, "This is a TensorRT deploy project");
     xffw::XfConfig *config = xffw::ConfigHelper::Ins();
 
     trt::InferConfig infer_config;
@@ -25,7 +30,8 @@ int main()
     config->Get("inference", "confidence_threshold", infer_config.conf_threshold);
     config->Get("inference", "iou_threshold", infer_config.iou_threshold);
     auto infer = xf::create_inference(infer_config);
-
+    while (1)
+        ;
     return 0;
 }
 

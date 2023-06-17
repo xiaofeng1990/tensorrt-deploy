@@ -6,7 +6,7 @@
 #include <memory>
 #include <opencv2/opencv.hpp>
 #include <string>
-
+#include "tensorrt/trt_utils.h"
 namespace xf {
 #define DEFAULT_MAX_BATCH_SIZE 5
 struct Job {
