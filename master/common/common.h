@@ -21,7 +21,9 @@ size_t GetExecutablePath(std::string &processdir, std::string &processname);
  * @return std::vector<std::string> file list
  */
 std::vector<std::string> FindFilesForDir(const char *dir_name);
-
+std::string GetFileNameFromPath(std::string path);
+std::string GetDirectory(std::string path);
+bool IsDir(std::string path);
 } // namespace xffw
 
 #endif // XFLOG_COMMON_H_

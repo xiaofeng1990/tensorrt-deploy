@@ -1,8 +1,9 @@
 #include "yolo_infer.h"
+#include "common/common.h"
 #include "common/config_helper.h"
 #include "common/logging.h"
 #include "infer_interface.h"
-
+#include "tensorrt/builder.h"
 #include "tensorrt/infer.h"
 #include <future>
 #include <mutex>
@@ -43,31 +44,31 @@ YoloImpl::~YoloImpl()
     }
 }
 
-bool YoloImpl::LoadModel(const std::string &onnx_file)
+bool YoloImpl::LoadModel(const std::string &engine_file)
 {
     //资源哪里分配，哪里释放，哪里使用
     std::promise<bool> pro;
     running_ = true;
     // todo 优化为线程池
-    thread_ = std::thread(&YoloImpl::Worker, this, onnx_file, std::ref(pro));
+    thread_ = std::thread(&YoloImpl::Worker, this, engine_file, std::ref(pro));
 
     return pro.get_future().get();
 }
 
-void YoloImpl::Worker(std::string onnx_file, std::promise<bool> &pro)
+void YoloImpl::Worker(std::string engine_file, std::promise<bool> &pro)
 {
     //模型加载
-    bool ret = infer_.LoadModel(onnx_file);
+    bool ret = infer_.LoadModel(engine_file);
 
     if (!ret)
     {
-        XF_LOGT(ERROR, TAG, "load model %s failed\n", onnx_file.c_str());
+        XF_LOGT(ERROR, TAG, "load model %s failed\n", engine_file.c_str());
         pro.set_value(false);
         return;
     }
     else
     {
-        XF_LOGT(INFO, TAG, "load model %s succeed\n", onnx_file.c_str());
+        XF_LOGT(INFO, TAG, "load model %s succeed\n", engine_file.c_str());
         max_batch_size_ = infer_.GetMaxBatchSize();
         XF_LOGT(INFO, TAG, "max batch size %d\n", max_batch_size_);
         pro.set_value(true);
@@ -125,7 +126,7 @@ void YoloImpl::Worker(std::string onnx_file, std::promise<bool> &pro)
     }
     XF_LOGT(INFO, TAG, "thread down\n");
     // delete model
-    XF_LOGT(INFO, TAG, "release model %s\n", onnx_file.c_str());
+    XF_LOGT(INFO, TAG, "release model %s\n", engine_file.c_str());
     // context.clear();
 }
 
@@ -149,10 +150,18 @@ std::shared_future<std::string> YoloImpl::Commits(std::string image)
 void YoloImpl::Destroy() {}
 
 // create instance and load model
-std::shared_ptr<InferInterface> create_inference(const std::string &onnx_file)
+std::shared_ptr<InferInterface> create_inference(trt::InferConfig infer_config)
 {
+    //通过onnx file build engine文件
+    //生成engine文件名称
+    auto folder = xffw::GetDirectory(infer_config.model_path);
+    auto filename = xffw::GetFileNameFromPath(infer_config.model_path);
+    std::string engine_name = folder + "/" + filename + ".engine";
+    //生成engine文件
+    trt::builder_engine(trt::FP16, infer_config.max_batch_size, infer_config.model_path, engine_name);
+
     std::shared_ptr<YoloImpl> instance(new YoloImpl());
-    if (!instance->LoadModel(onnx_file))
+    if (!instance->LoadModel(engine_name))
         instance.reset();
     return instance;
 }

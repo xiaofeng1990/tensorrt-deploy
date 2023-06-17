@@ -1,5 +1,6 @@
-#ifndef __MASTER_INTERENCE_INFERENCE_H_
-#define __MASTER_INTERENCE_INFERENCE_H_
+#ifndef __MASTER_INTERENCE_YOLO_INFER_H_
+#define __MASTER_INTERENCE_YOLO_INFER_H_
+
 #include "infer_interface.h"
 #include <future>
 #include <memory>
@@ -14,8 +15,8 @@ struct Job {
     cv::Mat image;
 };
 
-std::shared_ptr<InferInterface> create_inference(const std::string &onnx_file);
+std::shared_ptr<InferInterface> create_inference(trt::InferConfig infer_config);
 
 } // namespace xf
 
-#endif // __MASTER_INTERENCE_INFERENCE_H_
+#endif // __MASTER_INTERENCE_YOLO_INFER_H_
