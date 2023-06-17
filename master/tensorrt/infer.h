@@ -15,7 +15,7 @@ namespace trt {
 class Infer {
   public:
     Infer() = default;
-    ~Infer() = default;
+    ~Infer();
     //单个图像推理
     bool Inference(std::vector<cv::Mat> images);
     bool InferenceAsync(std::vector<cv::Mat> images);

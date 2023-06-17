@@ -40,12 +40,12 @@ BufferManager::BufferManager(std::shared_ptr<nvinfer1::ICudaEngine> engine, cons
         managed_buffers_.emplace_back(std::move(man_buf));
     }
 }
-BufferManager::~BufferManager()
-{
+// BufferManager::~BufferManager()
+// {
 
-    engine_.reset();
-    managed_buffers_.clear();
-}
+//     engine_.reset();
+//     managed_buffers_.clear();
+// }
 //!
 //! \brief Returns a vector of device buffers that you can use directly as
 //!        bindings for the execute and enqueue methods of IExecutionContext.
