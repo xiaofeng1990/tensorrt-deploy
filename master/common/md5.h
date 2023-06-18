@@ -8,7 +8,7 @@
 typedef unsigned char byte;
 typedef unsigned int uint32;
 
-namespace xf {
+namespace xffw {
 
 /* MD5 declaration. */
 class MD5 {

@@ -59,7 +59,7 @@ Rotation is separate from addition to prevent recomputation.
         (a) += (b);                                                                                                    \
     }
 
-namespace xf {
+namespace xffw {
 
 const byte MD5::PADDING[64] = {0x80};
 const char MD5::HEX[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
@@ -346,4 +346,4 @@ std::string MD5::bytesToHexString(const byte *input, size_t length)
 /* Convert digest to string value */
 std::string MD5::toString() { return bytesToHexString(digest(), 16); }
 
-} // namespace xf
+} // namespace xffw

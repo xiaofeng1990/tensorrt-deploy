@@ -5,7 +5,7 @@
 #include <NvInfer.h>
 #include <memory>
 #include <vector>
-
+#include <opencv2/opencv.hpp>
 namespace trt {
 
 //!
@@ -43,6 +43,7 @@ class EngineBufferManager {
     void *GetHostBuffer(const std::string &tensor_name) const;
     void *GetHostInputBuffer() const;
     void *GetHostOutputBuffer() const;
+    void SetHostInputBuffer(const std::vector<cv::Mat> &images);
 
     //!
     //! \brief Returns the size of the host and device buffers that correspond to tensorName.

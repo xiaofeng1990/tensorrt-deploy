@@ -8,14 +8,14 @@
     * 优化tensorrt
 
 ## 1. 导出onnx模型
-以目标检测中的[yoloV5](https://github.com/ultralytics/yolov5)为例，将pt文件导出为onnx文件，模型文件使用 small model yolov5s.pt
+以目标检测中的[yoloV5](https://github.com/ultralytics/yolov5)为例，将pt文件导出为onnx文件，模型文件使用 nano model yolov5n.pt
 
-* input size: 5x3x640x640
-* output size: 5x25200x85
+* input size: 1x3x640x640
+* output size: 1x25200x85
 * dataset: coco  
 
 ```python
-python export.py --weights yolov5s.pt --include onnx  --opset=11 --batch-size=5
+python export.py --weights yolov5n.pt --include onnx  --opset=11 --batch-size=5
 ```
 
 

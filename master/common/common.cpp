@@ -61,7 +61,7 @@ std::string file_md5(const std::string &file)
         return {};
     }
 
-    xf::MD5 md5;
+    MD5 md5;
     std::streamsize length;
     char buffer[1024];
     while (!in.eof())

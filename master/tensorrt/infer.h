@@ -17,8 +17,9 @@ class Infer {
     Infer() = default;
     ~Infer();
     //单个图像推理
-    bool Inference(std::vector<cv::Mat> images);
-    bool InferenceAsync(std::vector<cv::Mat> images);
+    void *Inference(const std::vector<cv::Mat> &images);
+    void *Inference(const cv::Mat &images);
+    void *InferenceAsync(std::vector<cv::Mat> images);
     // batch 推理
 
     //接在engine文件到context
@@ -30,6 +31,10 @@ class Infer {
     void SynchronizeStream();
     int GetMaxBatchSize();
     void GetModelProperty();
+    std::vector<int> GetOutputShape();
+    std::vector<int> GetInputShape();
+    void TestModel();
+    void TestModel2();
 
   private:
     std::vector<unsigned char> LoadEngine(std::string engine_file);
@@ -47,6 +52,10 @@ class Infer {
     int max_batch_size_;
     int opt_batch_size_;
     int min_batch_size_;
+    int output_buffer_size_;
+    int input_buffer_size_;
+    nvinfer1::Dims input_dims_;
+    nvinfer1::Dims output_dims_;
     static constexpr const char *TAG = "infer";
     TRTLogger gLogger;
 };

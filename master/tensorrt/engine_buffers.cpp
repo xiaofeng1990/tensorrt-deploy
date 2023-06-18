@@ -13,15 +13,10 @@ EngineBufferManager::EngineBufferManager(std::shared_ptr<nvinfer1::ICudaEngine> 
     for (int i = 0; i < engine->getNbBindings(); i++)
     {
         auto dims = engine_->getBindingDimensions(i);
-        size_t vol = 0;
+        size_t vol = 1;
         if (dims.d[0] <= 0)
         {
-            dims.d[0] = 1;
-            vol = static_cast<size_t>(batch_size_);
-        }
-        else
-        {
-            vol = 1;
+            dims.d[0] = static_cast<size_t>(batch_size_);
         }
 
         nvinfer1::DataType type = engine_->getBindingDataType(i);
@@ -162,4 +157,27 @@ void EngineBufferManager::MemcpyBuffers(const bool copy_input, const bool device
 std::string EngineBufferManager::GetInputTensorName() { return input_tensort_name_; }
 std::string EngineBufferManager::GetOutputTensorName() { return output_tensort_name_; }
 void EngineBufferManager::SetDeviceInputBuffer() {}
+
+void EngineBufferManager::SetHostInputBuffer(const std::vector<cv::Mat> &images)
+{
+    float *host_input_buffer = static_cast<float *>(GetHostInputBuffer());
+    for (auto image : images)
+    {
+        int image_area = image.cols * image.rows;
+        unsigned char *pimage = image.data;
+        float *phost_b = host_input_buffer + image_area * 0;
+        float *phost_g = host_input_buffer + image_area * 1;
+        float *phost_r = host_input_buffer + image_area * 2;
+        for (int i = 0; i < image_area; ++i, pimage += 3)
+        {
+            // 注意这里的顺序rgb调换了
+            *phost_r++ = pimage[0] / 255.0f;
+            *phost_g++ = pimage[1] / 255.0f;
+            *phost_b++ = pimage[2] / 255.0f;
+        }
+        size_t size_image = image.cols * image.rows * 3;
+        host_input_buffer += size_image;
+    }
+}
+
 } // namespace trt

@@ -5,13 +5,13 @@
 #include "tensorrt/builder.h"
 #include "tensorrt/cuda_tools.h"
 #include "tensorrt/engine_buffers.h"
+#include "tensorrt/infer.h"
 #include "tensorrt/trt_logger.h"
 #include "tensorrt/trt_utils.h"
 #include "version.h"
 #include <fstream>
 #include <iostream>
 #include <string>
-
 int main()
 {
     // config log
@@ -30,8 +30,16 @@ int main()
     config->Get("inference", "confidence_threshold", infer_config.conf_threshold);
     config->Get("inference", "iou_threshold", infer_config.iou_threshold);
     auto infer = xf::create_inference(infer_config);
+    std::string image_file = "./images/input-image.jpg";
+
+    auto result = infer->Commits(image_file);
+
+    // printf("%s \n", result.get().c_str());
     while (1)
         ;
+    // trt::Infer infer;
+    // infer.TestModel2();
+
     return 0;
 }
 
