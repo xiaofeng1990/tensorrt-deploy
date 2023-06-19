@@ -15,7 +15,9 @@ typedef std::vector<Box> BoxArray;
 struct Job {
     std::shared_ptr<std::promise<std::vector<Box>>> pro;
     std::string image_file;
-    cv::Mat image;
+    cv::Mat warp_mat;
+    // dst to image 2*3 matrix
+    float d2i[6];
 };
 
 std::shared_ptr<InferInterface> create_inference(trt::InferConfig infer_config);

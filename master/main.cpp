@@ -30,11 +30,21 @@ int main()
     config->Get("inference", "confidence_threshold", infer_config.conf_threshold);
     config->Get("inference", "iou_threshold", infer_config.iou_threshold);
     auto infer = xf::create_inference(infer_config);
-    std::string image_file = "./images/input-image.jpg";
+    std::string image_file = "./images/car.jpg";
 
     auto result = infer->Commits(image_file);
 
-    // printf("%s \n", result.get().c_str());
+    auto boxes = result.get();
+    cv::Mat image = cv::imread(image_file);
+    for (auto &box : boxes)
+    {
+        cv::rectangle(image, cv::Point(box.left, box.top), cv::Point(box.right, box.bottom), cv::Scalar(0, 255, 0), 2);
+        cv::putText(image, cv::format("%.2f", box.confidence), cv::Point(box.left, box.top - 7), 0, 0.8,
+                    cv::Scalar(0, 0, 255), 2, 16);
+    }
+    std::string save_image_file = "image-draw.jpg";
+    cv::imwrite(save_image_file, image);
+
     while (1)
         ;
     // trt::Infer infer;

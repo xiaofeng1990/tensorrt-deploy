@@ -18,12 +18,12 @@ class YoloImpl : public InferInterface {
     bool LoadModel(const std::string &onnx_file);
     virtual std::shared_future<std::vector<Box>> Commits(const std::string &image_file) override;
     void Destroy();
-    void Preprocess(std::vector<Job> &jobs);
+    void Preprocess(Job &job);
     void Postprocess();
     //推理消费
     void Worker(std::string onnx_file, std::promise<bool> &pro);
-    std::vector<Box> Decode(float *predict, int num_box, int num_prob, float confidence_threshold = 0.25f,
-                            float nms_threshold = 0.45f);
+    std::vector<Box> Decode(float *predict, int num_box, int num_prob, const float *d2i,
+                            float confidence_threshold = 0.25f, float nms_threshold = 0.45f);
 
   private:
     //消费者
@@ -34,9 +34,10 @@ class YoloImpl : public InferInterface {
     std::condition_variable condition_;
     int max_batch_size_;
     trt::Infer infer_;
+    // channel, height, width 3x640x640
     std::vector<int> input_shape_;
+    // numbox, numprob 25200x85
     std::vector<int> output_shape_;
-
     static constexpr const char *TAG = "yolo_infer";
 };
 YoloImpl::~YoloImpl()
@@ -112,7 +113,7 @@ void YoloImpl::Worker(std::string engine_file, std::promise<bool> &pro)
         for (int i = 0; i < jobs.size(); i++)
         {
             // load image
-            images.push_back(jobs[i].image);
+            images.push_back(jobs[i].warp_mat);
             // todo 前处理
         }
 
@@ -125,22 +126,10 @@ void YoloImpl::Worker(std::string engine_file, std::promise<bool> &pro)
             auto &job = jobs[i];
             // * output size: 5x25200x85
             auto predict = (float *)(outputs + output_numbox * output_numprob * i);
-
-            auto boxes = Decode(predict, output_numbox, output_numprob);
-
-            for (auto &box : boxes)
-            {
-                cv::rectangle(job.image, cv::Point(box.left, box.top), cv::Point(box.right, box.bottom),
-                              cv::Scalar(0, 255, 0), 2);
-                cv::putText(job.image, cv::format("%.2f", box.confidence), cv::Point(box.left, box.top - 7), 0, 0.8,
-                            cv::Scalar(0, 0, 255), 2, 16);
-            }
-            std::string save_image_file = "image-draw.jpg";
-            cv::imwrite(save_image_file, job.image);
             //后处理
+            auto boxes = Decode(predict, output_numbox, output_numprob, job.d2i);
             job.pro->set_value(boxes);
         }
-
         batch_id++;
         jobs.clear();
     }
@@ -157,9 +146,10 @@ std::shared_future<std::vector<Box>> YoloImpl::Commits(const std::string &image_
     job.pro.reset(new std::promise<std::vector<Box>>());
 
     // todo 预处理
-    job.image = cv::imread(image_file);
-
     job.image_file = image_file;
+
+    Preprocess(job);
+
     std::lock_guard<std::mutex> lock(lock_job_);
     qjobs_.push(job);
     // detecton push
@@ -172,18 +162,51 @@ std::shared_future<std::vector<Box>> YoloImpl::Commits(const std::string &image_
     // XF_LOGT(INFO, TAG, "using %s inference\n", context_.c_str());
 }
 
-void YoloImpl::Preprocess(std::vector<Job> &jobs)
+void YoloImpl::Preprocess(Job &job)
 {
     // warpAffine
-    //计算矩阵
-    //矩阵变换
+    int input_channel = input_shape_[0];
+    int input_height = input_shape_[1];
+    int input_width = input_shape_[2];
+    cv::Mat image = cv::imread(job.image_file);
+
+    float scale_x = input_width / (float)image.cols;
+    float scale_y = input_height / (float)image.rows;
+    float scale = std::min(scale_x, scale_y);
+    float i2d[6];
+    /*
+        M = [
+                scale,    0,     -scale * from.width * 0.5 + to.width * 0.5
+                0,     scale,    -scale * from.height * 0.5 + to.height * 0.5
+                0,        0,                     1
+            ]
+    */
+    i2d[0] = scale;
+    i2d[1] = 0;
+    i2d[2] = (-scale * image.cols + input_width + scale - 1) * 0.5;
+    i2d[3] = 0;
+    i2d[4] = scale;
+    i2d[5] = (-scale * image.rows + input_height + scale - 1) * 0.5;
+
+    cv::Mat m2x3_i2d(2, 3, CV_32F, i2d);     // image to dst(network), 2x3 matrix
+    cv::Mat m2x3_d2i(2, 3, CV_32F, job.d2i); // dst to image, 2x3 matrix
+    // 获得逆矩阵
+    cv::invertAffineTransform(m2x3_i2d, m2x3_d2i);
+
+    cv::Mat warpt_image(input_height, input_width, CV_8UC3);
+    // 对图像做平移缩放旋转变换,可逆
+    cv::warpAffine(image, warpt_image, m2x3_i2d, warpt_image.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT,
+                   cv::Scalar::all(114));
+    // std::string warp_image_file = "./images/input-image.jpg";
+    // cv::imwrite(warp_image_file, input_image);
+    job.warp_mat = warpt_image;
 }
 void YoloImpl::Postprocess() {}
 
 void YoloImpl::Destroy() {}
 
-std::vector<Box> YoloImpl::Decode(float *predict, int num_box, int num_prob, float confidence_threshold,
-                                  float nms_threshold)
+std::vector<Box> YoloImpl::Decode(float *predict, int num_box, int num_prob, const float *d2i,
+                                  float confidence_threshold, float nms_threshold)
 {
     auto systemtime = std::chrono::system_clock::now();
     uint64_t timestamp1(std::chrono::duration_cast<std::chrono::microseconds>(systemtime.time_since_epoch()).count());
@@ -219,10 +242,17 @@ std::vector<Box> YoloImpl::Decode(float *predict, int num_box, int num_prob, flo
         float cy = pitem[1];
         float width = pitem[2];
         float height = pitem[3];
+
         float left = cx - width * 0.5;
         float top = cy - height * 0.5;
         float right = cx + width * 0.5;
         float bottom = cy + height * 0.5;
+
+        // 对应图上的位置
+        left = d2i[0] * left + d2i[2];
+        right = d2i[0] * right + d2i[2];
+        top = d2i[0] * top + d2i[5];
+        bottom = d2i[0] * bottom + d2i[5];
         boxes.emplace_back(left, top, right, bottom, confidence, (float)label);
     }
     // 对所有box根据置信度排序
