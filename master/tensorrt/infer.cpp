@@ -127,7 +127,6 @@ bool Infer::LoadModel(std::string engine_file)
     buffers_.reset(new EngineBufferManager(engine_, min_batch_size_));
     input_buffer_size_ = buffers_->Size(input_tensort_name_);
     output_buffer_size_ = buffers_->Size(output_tensort_name_);
-
     model_status_ = true;
     return true;
 }
