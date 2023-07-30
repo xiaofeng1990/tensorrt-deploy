@@ -17,6 +17,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BUILD_RELEASE "If ON, build release." OFF)
+option(ENABLE_LIBHV "If ON, libhv source code will be compiled." ON)
 
 # set(CMAKE_BUILD_TYPE Release)
 
@@ -33,6 +34,11 @@ if (UNIX)
   CHECK_INCLUDE_FILE(pthread.h HAVE_PTHREAD)
   CHECK_INCLUDE_FILE(malloc.h HAVE_MALLOC)
   set(LINKS_LIBS ${LINKS_LIBS} m pthread stdc++fs)
+endif()
+
+if(ENABLE_LIBHV AND EXISTS ${CMAKE_SOURCE_DIR}/3rd-party/libhv/CMakeLists.txt)
+  set(BUILD_SHARED_LIBS OFF)
+  add_subdirectory(3rd-party/libhv)
 endif()
 
 if(BUILD_RELEASE)

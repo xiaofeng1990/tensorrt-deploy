@@ -94,10 +94,15 @@ message(STATUS "Found TensorRT lib at ${TENSORRT_LIBRARY_ONNXPARSER}")
 include_directories(${TENSORRT_INCLUDE_DIR})
 set(LINKS_LIBS ${LINKS_LIBS} ${TENSORRT_LIBRARY_INFER} ${TENSORRT_LIBRARY_ONNXPARSER})
 
+include_directories(${CMAKE_BINARY_DIR}/3rd-party/libhv/include/hv)
+
+# set(LINKS_LIBS ${LINKS_LIBS} libhv_static)
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/common       COMMON_SRC_FILES)
 aux_source_directory(${PROJECT_SOURCE_DIR}/inference    INFER_SRC_FILES)
 aux_source_directory(${PROJECT_SOURCE_DIR}/tensorrt     TRT_SRC_FILES)
+
+file(GLOB_RECURSE HTTP_SRC_FILES ${PROJECT_SOURCE_DIR}/httpserver/*.cpp ${PROJECT_SOURCE_DIR}/httpserver/*.h)
 
 set(TARGET_NAME xf_deploy)
 
@@ -106,9 +111,10 @@ cuda_add_executable(${TARGET_NAME}
     ${COMMON_SRC_FILES}
     ${INFER_SRC_FILES}
     ${TRT_SRC_FILES}
+    ${HTTP_SRC_FILES}
 )
 
-target_link_libraries(${TARGET_NAME} ${LINKS_LIBS})
+target_link_libraries(${TARGET_NAME} hv_static ${LINKS_LIBS})
 
 # install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
