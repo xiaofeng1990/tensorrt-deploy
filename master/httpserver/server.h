@@ -5,6 +5,7 @@
 #include "hv.h"
 #include "router.h"
 #include <string>
+#include "uri_cb.h"
 namespace xf {
 class HttpServer {
   public:
@@ -12,7 +13,7 @@ class HttpServer {
     ~HttpServer() = default;
     bool Start(const std::string &ip, int32_t port);
     bool Stop();
-
+  void AddReceivedCb(received_data_cb_t cb);
   private:
     bool Init();
 

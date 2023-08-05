@@ -34,6 +34,7 @@ int main()
     std::string image_file = "./images/car.jpg";
 
     xf::HttpServer http_server;
+    http_server.AddReceivedCb(std::bind(&InferInterface::Commits, infer, std::placeholders::_1));
     http_server.Start("0.0.0.0", 9776);
 
     // auto result = infer->Commits(image_file);

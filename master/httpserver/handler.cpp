@@ -9,6 +9,12 @@
 #include "hfile.h"
 #include "hstring.h"
 #include "htime.h"
+#include "HttpMessage.h"
+#include "base64.h"
+#include <opencv2/opencv.hpp>
+#include"uri_cb.h"
+#include "json.hpp"
+
 int Handler::preprocessor(HttpRequest *req, HttpResponse *resp)
 {
     // printf("%s:%d\n", req->client_addr.ip.c_str(), req->client_addr.port);
@@ -75,11 +81,39 @@ int Handler::Detector(HttpRequest *req, HttpResponse *resp)
     {
         // 解析json
         XF_LOGT(DEBUG, TAG, "parse json\n");
+        std::string image_data_base64 = req->json["imageData"];
+        auto find = image_data_base64.find(",");
+      if (find != std::string::npos) {
+        image_data_base64 = image_data_base64.substr(find + 1);
+      }
+      std::string raw_data = hv::Base64Decode(image_data_base64.c_str());
+        std::vector<unsigned char> cvdata(raw_data.c_str(), raw_data.c_str() + raw_data.size());
+      cv::Mat img;
+      img = cv::imdecode(cvdata, cv::IMREAD_COLOR);
+      cv::imwrite("./test_cv.jpg", img);
     }
     catch (const std::exception &e)
     {
         std::cout << "receive data message: " << e.what() << std::endl;
         return 200;
+    }
+
+    if(UriCallback::Ins()->received_data_cb_)
+    {
+         auto result = UriCallback::Ins()->received_data_cb_("./test_cv.jpg");
+         auto boxes = result.get();
+    cv::Mat image = cv::imread("./test_cv.jpg");
+    for (auto &box : boxes)
+    {
+        cv::rectangle(image, cv::Point(box.left, box.top), cv::Point(box.right, box.bottom), cv::Scalar(0, 255, 0),2); 
+        cv::putText(image, cv::format("%.2f", box.confidence), cv::Point(box.left, box.top - 7), 0, 0.8,
+                    cv::Scalar(0, 0, 255), 2, 16);
+    }
+    std::string save_image_file = "image-draw.jpg";
+    cv::imwrite(save_image_file, image);
+    //  resp->json = hv::Json::parse();
+    // hv::Json jroot;
+    // resp->DumpBody();
     }
     return 200;
 }

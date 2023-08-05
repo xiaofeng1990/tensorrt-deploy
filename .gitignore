@@ -3,6 +3,8 @@ models
 output
 log
 *.onnx
+*.log
+
 # Prerequisites
 *.d
 

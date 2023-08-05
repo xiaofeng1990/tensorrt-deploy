@@ -33,4 +33,7 @@ bool HttpServer::Init()
         return false;
     }
 }
+
+void HttpServer::AddReceivedCb(received_data_cb_t cb) { UriCallback::Ins()->received_data_cb_ = cb; }
+
 } // namespace xf
